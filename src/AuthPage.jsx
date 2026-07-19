@@ -64,7 +64,7 @@ function AuthPage() {
             return;
         }
 
-        const dateOfBirth = `${regYear}-${regMonth.padStart(2, "0")}-${regDay.padStart(2, "0")}`;
+        const dob = `${regYear}-${regMonth.padStart(2, "0")}-${regDay.padStart(2, "0")}`;
 
         try {
             const response = await axios.post(
@@ -73,8 +73,8 @@ function AuthPage() {
                     username: regUsername,
                     email: regEmail,
                     password: regPassword,
-                    confirmPassword: regConfirmPassword,
-                    dateOfBirth,
+                    confirmpassword: regConfirmPassword,
+                    dob,
                 }
             );
             if (response.data.success) {
