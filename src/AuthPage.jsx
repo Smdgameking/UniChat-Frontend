@@ -73,6 +73,7 @@ function AuthPage() {
                     username: regUsername,
                     email: regEmail,
                     password: regPassword,
+                    confirmPassword: regConfirmPassword,
                     dateOfBirth,
                 }
             );
