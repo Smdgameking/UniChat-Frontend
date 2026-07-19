@@ -1,0 +1,14 @@
+.friends-page{
+
+    flex:1;
+
+    background:#313338;
+
+    color:white;
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+}

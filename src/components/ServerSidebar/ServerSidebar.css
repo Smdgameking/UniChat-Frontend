@@ -1,0 +1,14 @@
+.server-sidebar{
+
+    width:80px;
+
+    background:#1e1f22;
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    color:white;
+}
