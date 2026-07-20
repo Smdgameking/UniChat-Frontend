@@ -1,4 +1,4 @@
-import "./FriendsPage.css";
+import "./Chat.css";
 
 function FriendsPage(){
 
@@ -6,7 +6,7 @@ function FriendsPage(){
 
         <div className="friends-page">
 
-            Friends List
+           Chat 
 
         </div>
 
