@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   Panel,
   PanelGroup,
@@ -6,11 +7,29 @@ import {
 import ServerSidebar from "./components/ServerSidebar/ServerSidebar.jsx";
 import DMSidebar from "./components/DMSidebar/DMSidebar.jsx";
 import Chat from "./components/Chat/Chat.jsx";
+import ProfileCompletion from "./components/ProfileCompletion/ProfileCompletion.jsx";
 import "./UniChatHome.css";
 
 function UniChatHome() {
+  const [showProfileModal, setShowProfileModal] = useState(false);
+
+  useEffect(() => {
+    const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
+    if (stored.profileIncomplete === true) {
+      setShowProfileModal(true);
+    }
+  }, []);
+
+  function handleProfileComplete() {
+    setShowProfileModal(false);
+  }
+
   return (
     <div className="unichat-home">
+      {showProfileModal && (
+        <ProfileCompletion onComplete={handleProfileComplete} />
+      )}
+
       {/* Server Sidebar - fixed width */}
       <div className="server-wrapper">
         <ServerSidebar />

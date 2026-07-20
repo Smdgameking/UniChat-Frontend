@@ -38,6 +38,13 @@ function AuthPage() {
                 { email: loginEmail, password: loginPassword }
             );
             if (response.data.success) {
+                // Store user data including profileIncomplete flag
+                const userData = {
+                    token: response.data.token,
+                    username: response.data.user?.username || response.data.username,
+                    profileIncomplete: response.data.profileInComplete || false,
+                };
+                localStorage.setItem("unichat_user", JSON.stringify(userData));
                 navigate("/dashboard");
             }
         } catch (err) {
