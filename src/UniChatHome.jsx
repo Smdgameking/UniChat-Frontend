@@ -5,7 +5,7 @@ import {
   PanelResizeHandle,
 } from "react-resizable-panels";
 import ServerSidebar from "./components/ServerSidebar/ServerSidebar.jsx";
-import DMSidebar from "./components/DMSidebar/DMSidebar.jsx";
+import FriendsSidebar from "./components/FriendsSidebar/FriendsSidebar.jsx";
 import Chat from "./components/Chat/Chat.jsx";
 import ProfileCompletion from "./components/ProfileCompletion/ProfileCompletion.jsx";
 import Notifications from "./components/Notifications/Notifications.jsx";
@@ -15,6 +15,9 @@ function UniChatHome() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [selectedServer, setSelectedServer] = useState(null);
+  const [selectedChannel, setSelectedChannel] = useState(null);
+  const [selectedFriend, setSelectedFriend] = useState(null);
 
   useEffect(() => {
     const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
@@ -25,6 +28,22 @@ function UniChatHome() {
 
   function handleProfileComplete() {
     setShowProfileModal(false);
+  }
+
+  function handleSelectServer(server) {
+    setSelectedServer(server);
+    setSelectedChannel(null);
+    setSelectedFriend(null);
+  }
+
+  function handleSelectChannel(channel) {
+    setSelectedChannel(channel);
+    setSelectedFriend(null);
+  }
+
+  function handleSelectFriend(friend) {
+    setSelectedFriend(friend);
+    setSelectedChannel(null);
   }
 
   return (
@@ -61,28 +80,44 @@ function UniChatHome() {
         </div>
       </div>
 
-      {/* Server Sidebar - fixed width */}
-      <div className="server-wrapper">
-        <ServerSidebar />
-      </div>
-
       <PanelGroup direction="horizontal" autoSaveId="main-layout">
-        {/* DM Sidebar */}
-        <Panel defaultSize={20} minSize={12} maxSize={30}>
-          <div className="dm-wrapper">
-            <DMSidebar />
+        {/* Server Sidebar - Leftmost */}
+        <Panel defaultSize={8} minSize={5} maxSize={12}>
+          <div className="server-wrapper">
+            <ServerSidebar 
+              onSelectServer={handleSelectServer}
+              selectedServerId={selectedServer?.id}
+            />
           </div>
         </Panel>
 
         <PanelResizeHandle className="resize-handle" />
 
-        {/* Main Content Area */}
-        <Panel defaultSize={55} minSize={30}>
-          <div className="main-content">
-            <Chat />
+        {/* Friends/Channels Sidebar - Middle */}
+        <Panel defaultSize={20} minSize={15} maxSize={30}>
+          <div className="friends-wrapper">
+            <FriendsSidebar 
+              selectedServer={selectedServer}
+              onSelectChannel={handleSelectChannel}
+              selectedChannelId={selectedChannel?.id}
+              onSelectFriend={handleSelectFriend}
+              selectedFriendId={selectedFriend?.id}
+            />
           </div>
         </Panel>
 
+        <PanelResizeHandle className="resize-handle" />
+
+        {/* Main Content Area - Right */}
+        <Panel defaultSize={72} minSize={40}>
+          <div className="main-content">
+            <Chat 
+              selectedServer={selectedServer}
+              selectedChannel={selectedChannel}
+              selectedFriend={selectedFriend}
+            />
+          </div>
+        </Panel>
       </PanelGroup>
     </div>
   );

@@ -34,7 +34,7 @@ function AuthPage() {
 
         try {
             const response = await axios.post(
-                "http://localhost:3000/auth/login",
+                "http://10.119.79.91:3000/auth/login",
                 { email: loginEmail, password: loginPassword }
             );
             if (response.data.success) {
@@ -75,7 +75,7 @@ function AuthPage() {
 
         try {
             const response = await axios.post(
-                "http://localhost:3000/auth/register",
+                "http://10.119.79.91:3000/auth/register",
                 {
                     username: regUsername,
                     email: regEmail,

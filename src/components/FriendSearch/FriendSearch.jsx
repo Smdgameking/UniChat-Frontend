@@ -47,7 +47,7 @@ function FriendSearch({ onClose }) {
 
     try {
       const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
-      const response = await axios.get("http://localhost:3000/friend/search", {
+      const response = await axios.get("http://10.119.79.91:3000/friend/search", {
         params: { q },
         headers: { Authorization: `Bearer ${stored.token}` }
       });
