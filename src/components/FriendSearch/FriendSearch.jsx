@@ -1,19 +1,21 @@
 import { useState, useRef, useEffect } from "react";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { searchUsers, sendFriendRequest, fetchFriends } from "../../store/slices/friendSlice";
 import "./FriendSearch.css";
 
 function FriendSearch({ onClose }) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const searchRef = useRef(null);
   const timeoutRef = useRef(null);
+  const dispatch = useDispatch();
+  const searchResults = useSelector((state) => state.friends.searchResults);
 
   // Focus input on mount & handle click outside to close
   useEffect(() => {
     searchRef.current?.focus();
-    function handleClickOutside(e) {
+    function handleClickOutside() {
       if (searchRef.current && !searchRef.current.closest(".friend-search-modal")) {
         onClose();
       }
@@ -27,62 +29,31 @@ function FriendSearch({ onClose }) {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
     if (!query.trim()) {
-      setResults([]);
       setError("");
       return;
     }
 
     timeoutRef.current = setTimeout(async () => {
-      await searchUsers(query.trim());
+      setLoading(true);
+      setError("");
+      const result = await dispatch(searchUsers(query.trim()));
+      if (searchUsers.rejected.match(result)) {
+        setError(result.payload || "Search failed");
+      }
+      setLoading(false);
     }, 400);
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [query]);
+  }, [query, dispatch]);
 
-  async function searchUsers(q) {
-    setLoading(true);
-    setError("");
-
+  async function handleSendFriendRequest(recipientId) {
     try {
-      const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
-      const response = await axios.get("http://localhost:3000/friend/search", {
-        params: { q },
-        headers: { Authorization: `Bearer ${stored.token}` }
-      });
-
-      if (response.data.success) {
-        setResults(response.data.users);
-        if (response.data.users.length === 0) {
-          setError("No users found");
-        }
-      }
+      await dispatch(sendFriendRequest(recipientId)).unwrap();
+      await dispatch(fetchFriends());
     } catch (err) {
-      setError(err.response?.data?.message || "Search failed");
-      setResults([]);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function sendFriendRequest(recipientId) {
-    try {
-      const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
-      await axios.post(
-        `http://localhost:3000/friend/request/${recipientId}`,
-        {},
-        { headers: { Authorization: `Bearer ${stored.token}` } }
-      );
-
-      // Update local state to show "pending"
-      setResults(prev =>
-        prev.map(u =>
-          u.id === recipientId ? { ...u, friendStatus: "pending" } : u
-        )
-      );
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to send friend request");
+      alert(err || "Failed to send friend request");
     }
   }
 
@@ -96,6 +67,8 @@ function FriendSearch({ onClose }) {
         return null;
     }
   }
+
+  const users = query.trim() ? searchResults : [];
 
   return (
     <div className="friend-search-overlay" onClick={onClose}>
@@ -126,7 +99,7 @@ function FriendSearch({ onClose }) {
         </div>
 
         <div className="fs-results">
-          {error && !loading && (
+          {error && !loading && query.trim() && (
             <div className="fs-empty">
               <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.4">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -138,7 +111,7 @@ function FriendSearch({ onClose }) {
             </div>
           )}
 
-          {results.map(user => (
+          {users.map(user => (
             <div key={user.id} className="fs-user-card">
               <div className="fs-user-avatar">
                 {user.displayName.charAt(0).toUpperCase()}
@@ -152,7 +125,7 @@ function FriendSearch({ onClose }) {
                 {user.friendStatus === "none" && (
                   <button
                     className="fs-add-btn"
-                    onClick={() => sendFriendRequest(user.id)}
+                    onClick={() => handleSendFriendRequest(user.id)}
                     title="Send friend request"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

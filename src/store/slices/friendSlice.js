@@ -18,6 +18,38 @@ export const fetchFriends = createAsyncThunk(
   }
 );
 
+export const fetchFriendRequests = createAsyncThunk(
+  "friends/fetchFriendRequests",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
+      const response = await axios.get(
+        "http://localhost:3000/friend/requests",
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return response.data.requests;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Failed to fetch requests");
+    }
+  }
+);
+
+export const searchUsers = createAsyncThunk(
+  "friends/searchUsers",
+  async (query, { rejectWithValue }) => {
+    try {
+      const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
+      const response = await axios.get("http://localhost:3000/friend/search", {
+        params: { q: query },
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      return response.data.users;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || "Search failed");
+    }
+  }
+);
+
 export const sendFriendRequest = createAsyncThunk(
   "friends/sendFriendRequest",
   async (recipientId, { rejectWithValue }) => {
@@ -90,6 +122,7 @@ const friendSlice = createSlice({
   initialState: {
     friends: [],
     friendRequests: [],
+    searchResults: [],
     loading: false,
     error: null,
   },
@@ -112,6 +145,23 @@ const friendSlice = createSlice({
       .addCase(fetchFriends.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      // Fetch Friend Requests
+      .addCase(fetchFriendRequests.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchFriendRequests.fulfilled, (state, action) => {
+        state.loading = false;
+        state.friendRequests = action.payload;
+      })
+      .addCase(fetchFriendRequests.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+      // Search Users
+      .addCase(searchUsers.fulfilled, (state, action) => {
+        state.searchResults = action.payload;
       })
       // Send Friend Request
       .addCase(sendFriendRequest.fulfilled, (state, action) => {

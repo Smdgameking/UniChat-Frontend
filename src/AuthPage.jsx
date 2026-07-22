@@ -1,7 +1,8 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { getErrorMessage } from "./utils/errorHandler";
+import { getErrorMessage, getPasswordValidationError } from "./utils/errorHandler";
+import { checkPasswordStrength } from "./utils/passwordStrength";
 import "./AuthPage.css";
 
 function AuthPage() {
@@ -23,6 +24,14 @@ function AuthPage() {
 
     // Error state
     const [error, setError] = useState("");
+
+    // Password visibility state
+    const [showLoginPassword, setShowLoginPassword] = useState(false);
+    const [showRegPassword, setShowRegPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    // Password strength state
+    const [passwordStrength, setPasswordStrength] = useState(null);
 
     async function handleLogin(e) {
         e.preventDefault();
@@ -57,6 +66,7 @@ function AuthPage() {
     async function handleRegister(e) {
         e.preventDefault();
         setError("");
+        setPasswordStrength(null);
 
         if (!regUsername || !regEmail || !regPassword || !regConfirmPassword || !regMonth || !regDay || !regYear) {
             setError("Please fill in all fields");
@@ -68,8 +78,8 @@ function AuthPage() {
             return;
         }
 
-        if (regPassword.length < 6) {
-            setError("Password must be at least 6 characters");
+        if (regPassword.length < 8) {
+            setError("Password must be at least 8 characters");
             return;
         }
 
@@ -89,9 +99,15 @@ function AuthPage() {
             if (response.data.success) {
                 setIsLogin(true);
                 setError("Account created! Please log in.");
+                setPasswordStrength(null);
             }
         } catch (err) {
-            setError(getErrorMessage(err, "Registration failed"));
+            const passwordError = getPasswordValidationError(err);
+            if (passwordError) {
+                setError(passwordError);
+            } else {
+                setError(getErrorMessage(err, "Registration failed"));
+            }
         }
     }
 
@@ -135,7 +151,7 @@ function AuthPage() {
 
                     {/* Error/Success message */}
                     {error && (
-                        <div className={`auth-message ${error.includes("created") ? "success" : "error"}`}>
+                        <div className={`auth-message ${error.includes("created") ? "success" : "error"} ${error.includes("stronger password is required") ? "password-validation" : ""}`}>
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 {error.includes("created")
                                     ? <polyline points="20 6 9 17 4 12"/>
@@ -173,18 +189,36 @@ function AuthPage() {
 
                             <div className="input-group">
                                 <label htmlFor="login-password">Password</label>
-                                <div className="input-field">
+                                <div className="input-field has-toggle">
                                     <svg className="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                                         <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                                     </svg>
                                     <input
-                                        type="password"
+                                        type={showLoginPassword ? "text" : "password"}
                                         id="login-password"
                                         placeholder="Enter your password"
                                         value={loginPassword}
                                         onChange={(e) => setLoginPassword(e.target.value)}
                                     />
+                                    <button
+                                        type="button"
+                                        className="password-toggle"
+                                        onClick={() => setShowLoginPassword(!showLoginPassword)}
+                                        aria-label={showLoginPassword ? "Hide password" : "Show password"}
+                                    >
+                                        {showLoginPassword ? (
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                                <line x1="1" y1="1" x2="23" y2="23"/>
+                                            </svg>
+                                        ) : (
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                                <circle cx="12" cy="12" r="3"/>
+                                            </svg>
+                                        )}
+                                    </button>
                                 </div>
                             </div>
 
@@ -242,36 +276,96 @@ function AuthPage() {
 
                             <div className="input-group">
                                 <label htmlFor="reg-password">Password</label>
-                                <div className="input-field">
+                                <div className="input-field has-toggle">
                                     <svg className="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                                         <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                                     </svg>
                                     <input
-                                        type="password"
+                                        type={showRegPassword ? "text" : "password"}
                                         id="reg-password"
                                         placeholder="Create a password"
                                         value={regPassword}
-                                        onChange={(e) => setRegPassword(e.target.value)}
+                                        onChange={(e) => {
+                                            setRegPassword(e.target.value);
+                                            const strength = checkPasswordStrength(e.target.value);
+                                            setPasswordStrength(strength);
+                                        }}
                                     />
+                                    <button
+                                        type="button"
+                                        className="password-toggle"
+                                        onClick={() => setShowRegPassword(!showRegPassword)}
+                                        aria-label={showRegPassword ? "Hide password" : "Show password"}
+                                    >
+                                        {showRegPassword ? (
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                                <line x1="1" y1="1" x2="23" y2="23"/>
+                                            </svg>
+                                        ) : (
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                                <circle cx="12" cy="12" r="3"/>
+                                            </svg>
+                                        )}
+                                    </button>
                                 </div>
+                                {passwordStrength && (
+                                    <div className="password-strength-meter">
+                                        <div className="strength-bar-container">
+                                            <div
+                                                className={`strength-bar-fill strength-${passwordStrength.level}`}
+                                                style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
+                                            />
+                                        </div>
+                                        <div className={`strength-text strength-${passwordStrength.level}`}>
+                                            {passwordStrength.label}
+                                        </div>
+                                        <div className="strength-requirements">
+                                            <span className={passwordStrength.requirements.length ? "" : "met"}>8+ chars</span>
+                                            <span className={passwordStrength.requirements.uppercase ? "" : "met"}>A-Z</span>
+                                            <span className={passwordStrength.requirements.lowercase ? "" : "met"}>a-z</span>
+                                            <span className={passwordStrength.requirements.number ? "" : "met"}>0-9</span>
+                                            <span className={passwordStrength.requirements.specialChar ? "" : "met"}>#?!</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="input-group">
                                 <label htmlFor="reg-confirm">Confirm Password</label>
-                                <div className="input-field">
+                                <div className="input-field has-toggle">
                                     <svg className="input-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                                         <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                                        <polyline points="9 14 11 16 15 12"/>
                                     </svg>
+                                    <polyline points="9 14 11 16 15 12"/>
                                     <input
-                                        type="password"
+                                        type={showConfirmPassword ? "text" : "password"}
                                         id="reg-confirm"
                                         placeholder="Confirm your password"
                                         value={regConfirmPassword}
                                         onChange={(e) => setRegConfirmPassword(e.target.value)}
                                     />
+                                    <button
+                                        type="button"
+                                        className="password-toggle"
+                                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                        aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                                    >
+                                        {showConfirmPassword ? (
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                                                <line x1="1" y1="1" x2="23" y2="23"/>
+                                            </svg>
+                                        ) : (
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                                <circle cx="12" cy="12" r="3"/>
+                                            </svg>
+                                        )}
+                                    </button>
                                 </div>
                             </div>
 

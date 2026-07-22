@@ -132,7 +132,107 @@ body {
     color: rgba(255, 255, 255, 0.8);
 }
 
-/* ===== Message ===== */
+.password-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.3);
+    cursor: pointer;
+    transition: color 0.3s ease;
+}
+
+.input-field.has-toggle {
+    position: relative;
+    padding-right: 14px;
+}
+
+.password-toggle:hover {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* ===== Password Strength Meter ===== */
+.password-strength-meter {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    animation: fadeIn 0.3s ease;
+}
+
+.strength-bar-container {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.strength-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+.strength-text {
+    font-size: 12px;
+    font-weight: 600;
+    text-align: right;
+}
+
+.strength-weak {
+    color: #ff6b81;
+}
+
+.strength-fair {
+    color: #ffa502;
+}
+
+.strength-good {
+    color: #eccc68;
+}
+
+.strength-strong {
+    color: #2ed573;
+}
+
+.strength-bar-fill.strength-weak {
+    background-color: #ff6b81;
+}
+
+.strength-bar-fill.strength-fair {
+    background-color: #ffa502;
+}
+
+.strength-bar-fill.strength-good {
+    background-color: #eccc68;
+}
+
+.strength-bar-fill.strength-strong {
+    background-color: #2ed573;
+}
+
+.strength-requirements {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.strength-requirements span {
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.strength-requirements span.met {
+    color: #2ed573;
+    border-color: rgba(46, 213, 115, 0.3);
+    background: rgba(46, 213, 115, 0.08);
+}
+
+/* ===== Auth Message ===== */
 .auth-message {
     display: flex;
     align-items: center;
@@ -154,6 +254,12 @@ body {
     background: rgba(46, 213, 115, 0.15);
     border: 1px solid rgba(46, 213, 115, 0.3);
     color: #2ed573;
+}
+
+.auth-message.password-validation {
+    background: rgba(255, 165, 2, 0.15);
+    border: 1px solid rgba(255, 165, 2, 0.3);
+    color: #ffa502;
 }
 
 @keyframes slideDown {

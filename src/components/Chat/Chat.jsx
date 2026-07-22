@@ -16,6 +16,7 @@ function Chat({ selectedServer, selectedChannel, selectedFriend }) {
   const [error, setError] = useState("");
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
+  const typingTimeoutsRef = useRef({});
 
   // Connect socket on mount
   useEffect(() => {
@@ -55,18 +56,38 @@ function Chat({ selectedServer, selectedChannel, selectedFriend }) {
 
   // Listen for typing indicators
   useEffect(() => {
+    const currentTypingTimeouts = typingTimeoutsRef.current;
+
     const handleTyping = (data) => {
       const { userId, userName, type } = data;
       if (type === "friend" && selectedFriend && userId === selectedFriend.id) {
         dispatch(setTypingUser({ userId, userName }));
+        if (currentTypingTimeouts[userId]) {
+          clearTimeout(currentTypingTimeouts[userId]);
+        }
+        currentTypingTimeouts[userId] = setTimeout(() => {
+          dispatch(removeTypingUser(userId));
+          delete currentTypingTimeouts[userId];
+        }, 5000);
       } else if (type === "channel" && selectedChannel && data.channelId === selectedChannel.id) {
         dispatch(setTypingUser({ userId, userName }));
+        if (currentTypingTimeouts[userId]) {
+          clearTimeout(currentTypingTimeouts[userId]);
+        }
+        currentTypingTimeouts[userId] = setTimeout(() => {
+          dispatch(removeTypingUser(userId));
+          delete currentTypingTimeouts[userId];
+        }, 5000);
       }
     };
 
     const handleStopTyping = (data) => {
       const { userId } = data;
       dispatch(removeTypingUser(userId));
+      if (currentTypingTimeouts[userId]) {
+        clearTimeout(currentTypingTimeouts[userId]);
+        delete currentTypingTimeouts[userId];
+      }
     };
 
     socket.on("typing", handleTyping);
@@ -75,6 +96,7 @@ function Chat({ selectedServer, selectedChannel, selectedFriend }) {
     return () => {
       socket.off("typing", handleTyping);
       socket.off("stop_typing", handleStopTyping);
+      Object.values(currentTypingTimeouts).forEach(clearTimeout);
     };
   }, [dispatch, selectedFriend, selectedChannel]);
 
@@ -226,32 +248,35 @@ function Chat({ selectedServer, selectedChannel, selectedFriend }) {
     }
   }
 
-  // Handle typing indicator
+  // Handle typing indicator - reset timeout on each keystroke
   function handleTyping() {
-    if (!localTyping && (selectedChannel || selectedFriend)) {
+    if (!selectedChannel && !selectedFriend) return;
+
+    // Always reset the typing timeout
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+
+    // If not already typing, send typing event
+    if (!localTyping) {
       setLocalTyping(true);
-      
+
       if (selectedFriend) {
         socketService.sendTyping(selectedFriend.id, "friend");
       } else if (selectedChannel) {
         socketService.sendTyping(selectedChannel.id, "channel");
       }
-      
-      // Clear previous timeout
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
-      }
-      
-      // Stop typing after 3 seconds of inactivity
-      typingTimeoutRef.current = setTimeout(() => {
-        setLocalTyping(false);
-        if (selectedFriend) {
-          socketService.sendStopTyping(selectedFriend.id, "friend");
-        } else if (selectedChannel) {
-          socketService.sendStopTyping(selectedChannel.id, "channel");
-        }
-      }, 3000);
     }
+
+    // Set timeout to send stop_typing after 3 seconds of inactivity
+    typingTimeoutRef.current = setTimeout(() => {
+      setLocalTyping(false);
+      if (selectedFriend) {
+        socketService.sendStopTyping(selectedFriend.id, "friend");
+      } else if (selectedChannel) {
+        socketService.sendStopTyping(selectedChannel.id, "channel");
+      }
+    }, 3000);
   }
 
   function formatTime(timestamp) {
