@@ -2,7 +2,7 @@
 
 ## Base URL
 ```
-http://10.119.79.91:3000
+http://localhost:3000
 ```
 
 ## Authentication
@@ -392,7 +392,7 @@ Currently, the frontend uses **mock data** for demonstration. To connect to real
 
 2. Ensure your backend returns data in the format specified above
 
-3. Update the base URL if needed (currently `http://10.119.79.91:3000`)
+3. Update the base URL if needed (currently `http://localhost:3000`)
 
 ---
 
@@ -401,7 +401,7 @@ Currently, the frontend uses **mock data** for demonstration. To connect to real
 The frontend uses Socket.IO for real-time messaging. The socket service is located at `src/services/socket.js`.
 
 ### Connection
-- **URL**: `http://10.119.79.91:3000`
+- **URL**: `http://localhost:3000`
 - **Authentication**: JWT token sent in `auth` object during connection
 - **Transports**: WebSocket with polling fallback
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { getErrorMessage } from "../../utils/errorHandler";
 import "./FriendsSidebar.css";
 
 function FriendsSidebar({ selectedServer, onSelectChannel, selectedChannelId, onSelectFriend, selectedFriendId }) {
@@ -31,7 +32,7 @@ function FriendsSidebar({ selectedServer, onSelectChannel, selectedChannelId, on
       const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
       
       const response = await axios.get(
-        `http://10.119.79.91:3000/server/${selectedServer.id}/channels`,
+        `http://localhost:3000/server/${selectedServer.id}/channels`,
         { headers: { Authorization: `Bearer ${stored.token}` } }
       );
 
@@ -40,7 +41,7 @@ function FriendsSidebar({ selectedServer, onSelectChannel, selectedChannelId, on
         setFriends([]);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load channels");
+      setError(getErrorMessage(err, "Failed to load channels"));
       setChannels([]);
     } finally {
       setLoading(false);
@@ -53,7 +54,7 @@ function FriendsSidebar({ selectedServer, onSelectChannel, selectedChannelId, on
       setError("");
       const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
       
-      const response = await axios.get("http://10.119.79.91:3000/friend/list", {
+      const response = await axios.get("http://localhost:3000/friend/list", {
         headers: { Authorization: `Bearer ${stored.token}` }
       });
 
@@ -62,7 +63,7 @@ function FriendsSidebar({ selectedServer, onSelectChannel, selectedChannelId, on
         setChannels([]);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load friends");
+      setError(getErrorMessage(err, "Failed to load friends"));
       setFriends([]);
     } finally {
       setLoading(false);

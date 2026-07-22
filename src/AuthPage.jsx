@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { getErrorMessage } from "./utils/errorHandler";
 import "./AuthPage.css";
 
 function AuthPage() {
@@ -34,13 +35,14 @@ function AuthPage() {
 
         try {
             const response = await axios.post(
-                "http://10.119.79.91:3000/auth/login",
+                "http://localhost:3000/auth/login",
                 { email: loginEmail, password: loginPassword }
             );
             if (response.data.success) {
                 // Store user data including profileIncomplete flag
                 const userData = {
-                    token: response.data.token,
+                    token: response.data.accessToken,
+                    user: response.data.user,
                     username: response.data.user?.username || response.data.username,
                     profileIncomplete: response.data.profileInComplete || false,
                 };
@@ -48,7 +50,7 @@ function AuthPage() {
                 navigate("/dashboard");
             }
         } catch (err) {
-            setError(err.response?.data?.message || "Invalid email or password");
+            setError(getErrorMessage(err, "Invalid email or password"));
         }
     }
 
@@ -75,7 +77,7 @@ function AuthPage() {
 
         try {
             const response = await axios.post(
-                "http://10.119.79.91:3000/auth/register",
+                "http://localhost:3000/auth/register",
                 {
                     username: regUsername,
                     email: regEmail,
@@ -89,7 +91,7 @@ function AuthPage() {
                 setError("Account created! Please log in.");
             }
         } catch (err) {
-            setError(err.response?.data?.message || "Registration failed");
+            setError(getErrorMessage(err, "Registration failed"));
         }
     }
 

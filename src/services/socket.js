@@ -1,6 +1,6 @@
 import { io } from "socket.io-client";
 
-const SOCKET_URL = "http://10.119.79.91:3000";
+const SOCKET_URL = "http://localhost:3000";
 
 // Get token from localStorage
 const getToken = () => {
@@ -24,12 +24,12 @@ export const socketEvents = {
     console.log("Socket connected:", socket.id);
   },
 
-  disconnect: () => {
-    console.log("Socket disconnected");
+  disconnect: (reason) => {
+    console.log("Socket disconnected:", reason);
   },
 
   connect_error: (error) => {
-    console.error("Socket connection error:", error);
+    console.error("Socket connection error:", error.message);
   },
 
   // Chat events
@@ -81,6 +81,22 @@ export const socketService = {
   disconnect: () => {
     if (socket.connected) {
       socket.disconnect();
+    }
+  },
+
+  // Check if socket is connected
+  isConnected: () => {
+    return socket.connected;
+  },
+
+  // Reconnect with new auth token
+  reconnect: () => {
+    const token = getToken();
+    if (token) {
+      socket.auth = { token };
+      if (!socket.connected) {
+        socket.connect();
+      }
     }
   },
 

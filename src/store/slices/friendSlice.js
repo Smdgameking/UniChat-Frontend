@@ -8,7 +8,7 @@ export const fetchFriends = createAsyncThunk(
     try {
       const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
       const response = await axios.get(
-        "http://10.119.79.91:3000/friend/list",
+        "http://localhost:3000/friend/list",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return response.data.friends;
@@ -24,8 +24,8 @@ export const sendFriendRequest = createAsyncThunk(
     try {
       const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
       const response = await axios.post(
-        "http://10.119.79.91:3000/friend/request",
-        { recipientId },
+        `http://localhost:3000/friend/request/${recipientId}`,
+        {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return { ...response.data, recipientId };
@@ -41,7 +41,7 @@ export const acceptFriendRequest = createAsyncThunk(
     try {
       const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
       const response = await axios.post(
-        `http://10.119.79.91:3000/friend/request/${requestId}/accept`,
+        `http://localhost:3000/friend/accept/${requestId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -58,7 +58,7 @@ export const rejectFriendRequest = createAsyncThunk(
     try {
       const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
       const response = await axios.post(
-        `http://10.119.79.91:3000/friend/request/${requestId}/reject`,
+        `http://localhost:3000/friend/reject/${requestId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -75,7 +75,7 @@ export const removeFriend = createAsyncThunk(
     try {
       const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
       const response = await axios.delete(
-        `http://10.119.79.91:3000/friend/${friendId}`,
+        `http://localhost:3000/friend/${friendId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return { ...response.data, friendId };

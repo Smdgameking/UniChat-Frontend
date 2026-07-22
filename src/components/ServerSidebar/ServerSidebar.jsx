@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { getErrorMessage } from "../../utils/errorHandler";
 import "./ServerSidebar.css";
 
 function ServerSidebar({ onSelectServer, selectedServerId }) {
@@ -18,7 +19,7 @@ function ServerSidebar({ onSelectServer, selectedServerId }) {
       const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
       
       // Fetch user's servers
-      const response = await axios.get("http://10.119.79.91:3000/server/list", {
+      const response = await axios.get("http://localhost:3000/server/list", {
         headers: { Authorization: `Bearer ${stored.token}` }
       });
 
@@ -33,7 +34,7 @@ function ServerSidebar({ onSelectServer, selectedServerId }) {
         setServers([friendsServer, ...(response.data.servers || [])]);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to load servers");
+      setError(getErrorMessage(err, "Failed to load servers"));
       // Still show Friends server even if API fails
       setServers([{
         id: "friends",

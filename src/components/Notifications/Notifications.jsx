@@ -29,7 +29,7 @@ function Notifications({ onClose, onUnreadCountChange }) {
   async function fetchNotifications() {
     try {
       const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
-      const response = await axios.get("http://10.119.79.91:3000/notification", {
+      const response = await axios.get("http://localhost:3000/notification", {
         headers: { Authorization: `Bearer ${stored.token}` }
       });
 
@@ -50,7 +50,7 @@ function Notifications({ onClose, onUnreadCountChange }) {
     try {
       const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
       await axios.patch(
-        `http://10.119.79.91:3000/notification/${notificationId}/read`,
+        `http://localhost:3000/notification/${notificationId}/read`,
         {},
         { headers: { Authorization: `Bearer ${stored.token}` } }
       );
@@ -68,7 +68,7 @@ function Notifications({ onClose, onUnreadCountChange }) {
     try {
       const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
       await axios.delete(
-        `http://10.119.79.91:3000/notification/${notificationId}`,
+        `http://localhost:3000/notification/${notificationId}`,
         { headers: { Authorization: `Bearer ${stored.token}` } }
       );
 
@@ -86,7 +86,7 @@ function Notifications({ onClose, onUnreadCountChange }) {
     try {
       const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
       await axios.post(
-        `http://10.119.79.91:3000/notification/friend/${notificationId}/accept`,
+        `http://localhost:3000/notification/friend/${notificationId}/accept`,
         {},
         { headers: { Authorization: `Bearer ${stored.token}` } }
       );

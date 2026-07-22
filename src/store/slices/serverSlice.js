@@ -8,7 +8,7 @@ export const fetchServers = createAsyncThunk(
     try {
       const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
       const response = await axios.get(
-        "http://10.119.79.91:3000/server/list",
+        "http://localhost:3000/server/list",
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return response.data.servers;
@@ -24,7 +24,7 @@ export const fetchChannels = createAsyncThunk(
     try {
       const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
       const response = await axios.get(
-        `http://10.119.79.91:3000/server/${serverId}/channels`,
+        `http://localhost:3000/server/${serverId}/channels`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return { serverId, channels: response.data.channels };
@@ -40,7 +40,7 @@ export const createServer = createAsyncThunk(
     try {
       const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
       const response = await axios.post(
-        "http://10.119.79.91:3000/server/create",
+        "http://localhost:3000/server/create",
         serverData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -57,7 +57,7 @@ export const joinServer = createAsyncThunk(
     try {
       const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
       const response = await axios.post(
-        "http://10.119.79.91:3000/server/join",
+        "http://localhost:3000/server/join",
         { inviteCode },
         { headers: { Authorization: `Bearer ${token}` } }
       );

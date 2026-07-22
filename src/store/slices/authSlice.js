@@ -7,7 +7,7 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        "http://10.119.79.91:3000/auth/login",
+        "http://localhost:3000/auth/login",
         credentials
       );
       return response.data;
@@ -22,7 +22,7 @@ export const registerUser = createAsyncThunk(
   async (userData, { rejectWithValue }) => {
     try {
       const response = await axios.post(
-        "http://10.119.79.91:3000/auth/register",
+        "http://localhost:3000/auth/register",
         userData
       );
       return response.data;
@@ -38,7 +38,7 @@ export const completeProfile = createAsyncThunk(
     try {
       const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
       const response = await axios.post(
-        "http://10.119.79.91:3000/user/complete-profile",
+        "http://localhost:3000/user/complete-profile",
         profileData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -52,9 +52,11 @@ export const completeProfile = createAsyncThunk(
 const authSlice = createSlice({
   name: "auth",
   initialState: {
-    user: null,
+    user: localStorage.getItem("unichat_user") 
+      ? JSON.parse(localStorage.getItem("unichat_user")).user || null
+      : null,
     token: localStorage.getItem("unichat_user") 
-      ? JSON.parse(localStorage.getItem("unichat_user")).user 
+      ? JSON.parse(localStorage.getItem("unichat_user")).token || null
       : null,
     isAuthenticated: !!localStorage.getItem("unichat_user"),
     profileIncomplete: localStorage.getItem("unichat_user")
@@ -89,14 +91,14 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.token = action.payload.accessToken || action.payload.token;
         state.isAuthenticated = true;
-        state.profileIncomplete = action.payload.profileIncomplete || false;
+        state.profileIncomplete = action.payload.profileInComplete || action.payload.profileIncomplete || false;
         
         localStorage.setItem("unichat_user", JSON.stringify({
           user: action.payload.user,
-          token: action.payload.token,
-          profileIncomplete: action.payload.profileIncomplete || false,
+          token: action.payload.accessToken || action.payload.token,
+          profileIncomplete: action.payload.profileInComplete || action.payload.profileIncomplete || false,
         }));
       })
       .addCase(loginUser.rejected, (state, action) => {
@@ -111,14 +113,14 @@ const authSlice = createSlice({
       .addCase(registerUser.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload.user;
-        state.token = action.payload.token;
+        state.token = action.payload.accessToken || action.payload.token;
         state.isAuthenticated = true;
-        state.profileIncomplete = action.payload.profileIncomplete || false;
+        state.profileIncomplete = action.payload.profileInComplete || action.payload.profileIncomplete || false;
         
         localStorage.setItem("unichat_user", JSON.stringify({
           user: action.payload.user,
-          token: action.payload.token,
-          profileIncomplete: action.payload.profileIncomplete || false,
+          token: action.payload.accessToken || action.payload.token,
+          profileIncomplete: action.payload.profileInComplete || action.payload.profileIncomplete || false,
         }));
       })
       .addCase(registerUser.rejected, (state, action) => {

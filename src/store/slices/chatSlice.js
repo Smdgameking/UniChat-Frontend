@@ -8,7 +8,7 @@ export const fetchChannelMessages = createAsyncThunk(
     try {
       const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
       const response = await axios.get(
-        `http://10.119.79.91:3000/chat/channel/${channelId}/messages`,
+        `http://localhost:3000/chat/channel/${channelId}/messages`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return response.data.messages;
@@ -24,7 +24,7 @@ export const fetchFriendMessages = createAsyncThunk(
     try {
       const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
       const response = await axios.get(
-        `http://10.119.79.91:3000/chat/friend/${friendId}/messages`,
+        `http://localhost:3000/chat/friend/${friendId}/messages`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       return response.data.messages;
@@ -40,7 +40,7 @@ export const sendChannelMessage = createAsyncThunk(
     try {
       const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
       const response = await axios.post(
-        `http://10.119.79.91:3000/chat/channel/${channelId}/messages`,
+        `http://localhost:3000/chat/channel/${channelId}/messages`,
         { content },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -57,7 +57,7 @@ export const sendFriendMessage = createAsyncThunk(
     try {
       const token = JSON.parse(localStorage.getItem("unichat_user") || "{}").token;
       const response = await axios.post(
-        `http://10.119.79.91:3000/chat/friend/${friendId}/messages`,
+        `http://localhost:3000/chat/friend/${friendId}/messages`,
         { content },
         { headers: { Authorization: `Bearer ${token}` } }
       );

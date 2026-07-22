@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import { socket, socketService } from "../../services/socket";
-import { setTypingUser, removeTypingUser, addMessage, setConnectionStatus } from "../../store/slices/chatSlice";
+import { setTypingUser, removeTypingUser, addMessage, setMessages, setConnectionStatus } from "../../store/slices/chatSlice";
+import { getErrorMessage } from "../../utils/errorHandler";
 import "./Chat.css";
 
 function Chat({ selectedServer, selectedChannel, selectedFriend }) {
@@ -12,6 +13,7 @@ function Chat({ selectedServer, selectedChannel, selectedFriend }) {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const [localTyping, setLocalTyping] = useState(false);
+  const [error, setError] = useState("");
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
@@ -37,7 +39,7 @@ function Chat({ selectedServer, selectedChannel, selectedFriend }) {
   useEffect(() => {
     const handleNewMessage = (message) => {
       // Only add message if it's for current chat
-      if (selectedFriend && message.friendId === selectedFriend.id) {
+      if (selectedFriend && (message.friendId === selectedFriend.id || message.senderId === selectedFriend.id)) {
         dispatch(addMessage(message));
       } else if (selectedChannel && message.channelId === selectedChannel.id) {
         dispatch(addMessage(message));
@@ -98,7 +100,7 @@ function Chat({ selectedServer, selectedChannel, selectedFriend }) {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [reduxMessages]);
 
   function scrollToBottom() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -109,62 +111,33 @@ function Chat({ selectedServer, selectedChannel, selectedFriend }) {
 
     try {
       setLoading(true);
+      setError("");
       const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
       
+      if (!stored.token) {
+        setError("Session expired. Please log in again.");
+        setLoading(false);
+        return;
+      }
+
       let endpoint = "";
 
       if (selectedFriend) {
-        endpoint = `http://10.119.79.91:3000/chat/friend/${selectedFriend.id}/messages`;
+        endpoint = `http://localhost:3000/chat/friend/${selectedFriend.id}/messages`;
       } else if (selectedChannel) {
-        endpoint = `http://10.119.79.91:3000/chat/channel/${selectedChannel.id}/messages`;
+        endpoint = `http://localhost:3000/chat/channel/${selectedChannel.id}/messages`;
       }
 
-      // Placeholder: Uncomment when API is ready
-      // const response = await axios.get(endpoint, {
-      //   headers: { Authorization: `Bearer ${stored.token}` }
-      // });
-      // dispatch(setMessages(response.data.messages));
-
-      // Mock messages for demonstration
-      const mockMessages = selectedFriend ? [
-        {
-          id: 1,
-          senderId: selectedFriend.id,
-          senderName: selectedFriend.displayName,
-          content: "Hey! How are you?",
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          read: true
-        },
-        {
-          id: 2,
-          senderId: "me",
-          senderName: "You",
-          content: "I'm doing great! Thanks for asking.",
-          timestamp: new Date(Date.now() - 1800000).toISOString(),
-          read: true
-        }
-      ] : [
-        {
-          id: 1,
-          senderId: "user1",
-          senderName: "User 1",
-          content: `Welcome to #${selectedChannel.name}!`,
-          timestamp: new Date(Date.now() - 7200000).toISOString(),
-          read: true
-        },
-        {
-          id: 2,
-          senderId: "user2",
-          senderName: "User 2",
-          content: "This is a great channel!",
-          timestamp: new Date(Date.now() - 3600000).toISOString(),
-          read: true
-        }
-      ];
+      const response = await axios.get(endpoint, {
+        headers: { Authorization: `Bearer ${stored.token}` }
+      });
       
-      dispatch(setMessages(mockMessages));
+      if (response.data.success) {
+        dispatch(setMessages(response.data.messages));
+      }
     } catch (err) {
       console.error("Failed to fetch messages:", err);
+      setError(getErrorMessage(err, "Failed to load messages"));
     } finally {
       setLoading(false);
     }
@@ -176,14 +149,21 @@ function Chat({ selectedServer, selectedChannel, selectedFriend }) {
 
     try {
       setSending(true);
+      setError("");
       const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
       
+      if (!stored.token) {
+        setError("Session expired. Please log in again.");
+        setSending(false);
+        return;
+      }
+
       let endpoint = "";
 
       if (selectedFriend) {
-        endpoint = `http://10.119.79.91:3000/chat/friend/${selectedFriend.id}/messages`;
+        endpoint = `http://localhost:3000/chat/friend/${selectedFriend.id}/messages`;
       } else if (selectedChannel) {
-        endpoint = `http://10.119.79.91:3000/chat/channel/${selectedChannel.id}/messages`;
+        endpoint = `http://localhost:3000/chat/channel/${selectedChannel.id}/messages`;
       }
 
       // Prepare message object
@@ -205,6 +185,7 @@ function Chat({ selectedServer, selectedChannel, selectedFriend }) {
         }
       } catch (err) {
         console.error("Failed to save message to server:", err);
+        setError(getErrorMessage(err, "Failed to send message"));
         // Continue with socket even if HTTP fails
       }
 
@@ -239,7 +220,7 @@ function Chat({ selectedServer, selectedChannel, selectedFriend }) {
       setLocalTyping(false);
     } catch (err) {
       console.error("Failed to send message:", err);
-      alert(err.response?.data?.message || "Failed to send message");
+      setError(getErrorMessage(err, "Failed to send message"));
     } finally {
       setSending(false);
     }
@@ -282,17 +263,33 @@ function Chat({ selectedServer, selectedChannel, selectedFriend }) {
     });
   }
 
+  // Error banner component
+  const errorBanner = error ? (
+    <div className="chat-error-banner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span>{error}</span>
+      <button className="chat-error-dismiss" onClick={() => setError("")}>×</button>
+    </div>
+  ) : null;
+
   if (!selectedChannel && !selectedFriend) {
     return (
       <div className="chat-container">
+        {errorBanner}
         <div className="chat-empty">
           <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" opacity="0.3">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
           </svg>
           <h3>Welcome to UniChat</h3>
           <p>Select a channel or friend to start chatting</p>
-          {!isConnected && (
-            <p className="connection-status">Connecting to server...</p>
+          {isConnected ? (
+            <p className="connection-status connected">● Connected to server</p>
+          ) : (
+            <p className="connection-status disconnected">◌ Unable to connect to server. Make sure the backend is running.</p>
           )}
         </div>
       </div>
@@ -301,7 +298,6 @@ function Chat({ selectedServer, selectedChannel, selectedFriend }) {
 
   const messages = reduxMessages;
 
-  const chatTarget = selectedFriend || selectedChannel;
   const chatTitle = selectedFriend 
     ? selectedFriend.displayName 
     : `#${selectedChannel.name}`;
@@ -311,6 +307,16 @@ function Chat({ selectedServer, selectedChannel, selectedFriend }) {
 
   return (
     <div className="chat-container">
+      {errorBanner}
+
+      {/* Connection status bar (shown when disconnected) */}
+      {!isConnected && (
+        <div className="chat-connection-bar">
+          <div className="chat-connection-spinner"></div>
+          <span>Reconnecting to server...</span>
+        </div>
+      )}
+
       {/* Chat Header */}
       <div className="chat-header">
         <div className="chat-header-info">

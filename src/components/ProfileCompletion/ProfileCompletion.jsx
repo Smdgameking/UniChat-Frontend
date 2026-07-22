@@ -25,7 +25,7 @@ function ProfileCompletion({ onComplete }) {
     try {
       const stored = JSON.parse(localStorage.getItem("unichat_user") || "{}");
       const response = await axios.post(
-        "http://10.119.79.91:3000/user/complete-profile",
+        "http://localhost:3000/user/complete-profile",
         {
           username: stored.username,
           displayName,
